@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa do Caminhão</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; margin: 0; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    async function carregarLocalizacao() {
+      try {
+        // Busca a última localização via API
+        const res = await fetch("/api/locations/latest");
+        if (!res.ok) throw new Error("Erro ao buscar localização");
+
+        const data = await res.json();
+
+        // Verifica se retornou latitude e longitude
+        if (!data.latitude || !data.longitude) throw new Error("Dados de localização inválidos");
+
+        // Inicializa o mapa centralizado na posição do veículo
+        const map = L.map("map").setView([data.latitude, data.longitude], 15);
+
+        // Adiciona camada de mapa (OpenStreetMap)
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors"
+        }).addTo(map);
+
+        // Adiciona marcador na posição do veículo
+        const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+        marker.bindPopup(
+          `<b>Caminhão</b><br>
+          Latitude: ${data.latitude}<br>
+          Longitude: ${data.longitude}<br>
+          ${new Date(data.datahora).toLocaleString("pt-BR")}`
+        ).openPopup();
+
+      } catch (error) {
+        console.error("Erro ao carregar localização:", error);
+        alert("Não foi possível carregar a posição do caminhão.");
+      }
+    }
+
+    // Executa ao carregar a página
+    carregarLocalizacao();
+  </script>
+</body>
+</html>
