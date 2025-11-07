@@ -57,7 +57,7 @@ const pool = new Pool({
 const query = (text, params) => pool.query(text, params);
 
 // Rota para pegar última localização
-app.get("/api/locations/latest", async (req, res) => {
+app.get("https://mapa-6wu5.onrender.com/api/locations/latest", async (req, res) => {
   try {
     const result = await query(
       `SELECT latitude, longitude,
