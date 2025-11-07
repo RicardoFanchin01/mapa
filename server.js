@@ -11,12 +11,33 @@ dotenv.config();
 const { Pool } = pkg;
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
 // Ajuste para __dirname no ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ✅ Configuração de CORS segura e compatível com Render
+const allowedOrigins = [
+  "https://mapa-6wu5.onrender.com", // 🔹 substitua pelo domínio do seu frontend Render
+  "http://localhost:5173", // para rodar localmente com Vite
+  "http://localhost:3000",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Origem não permitida pelo CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+
+app.use(express.json());
 
 // Serve arquivos da pasta "public"
 app.use(express.static(path.join(__dirname, "public")));
@@ -38,10 +59,10 @@ app.get("/api/locations/latest", async (req, res) => {
   try {
     const result = await query(
       `SELECT latitude, longitude,
-            created_at AS data_hora
-       FROM locations
-       ORDER BY data_hora DESC
-       LIMIT 1`
+              created_at AS data_hora
+         FROM locations
+         ORDER BY data_hora DESC
+         LIMIT 1`
     );
 
     if (result.rows.length === 0) {
