@@ -1,87 +1,54 @@
-// server.js
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import dotenv from "dotenv";
-import pkg from "pg";
-import db from './db.js';
-
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
 
 dotenv.config();
-
-const { Pool } = pkg;
-
-const app = express();
-
-// Ajuste para __dirname no ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Configuração de CORS segura e compatível com Render
-const allowedOrigins = [
-  "https://mapa-6wu5.onrender.com", // 🔹 substitua pelo domínio do seu frontend Render
-  "http://localhost:5173", // para rodar localmente com Vite
-  "http://localhost:3000",
-];
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Origem não permitida pelo CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  })
-);
-
-app.use(express.json());
-
-// Serve arquivos da pasta "public"
-app.use(express.static(path.join(__dirname, "public")));
-
-// Banco de dados
+// Configura banco Neon
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Exemplo: postgres://user:pass@host:5432/dbname
-  ssl: {
-    require: true,
-    rejectUnauthorized: false,
-  },
+  host: process.env.NEON_HOST,
+  database: process.env.NEON_DB,
+  user: process.env.NEON_USER,
+  password: process.env.NEON_PASSWORD,
+  port: process.env.NEON_PORT,
+  ssl: { rejectUnauthorized: false }
 });
 
-// Função de query reutilizável
-const query = (text, params) => pool.query(text, params);
+// Permite acesso do frontend
+app.use(cors());
 
-// Rota para pegar última localização
-app.get("https://mapa-6wu5.onrender.com/api/locations/latest", async (req, res) => {
+// Serve arquivos estáticos da pasta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Rota API para última localização
+app.get('/api/locations/latest', async (req, res) => {
   try {
-    const result = await query(
-      `SELECT latitude, longitude,
-              created_at AS data_hora
-         FROM locations
-         ORDER BY data_hora DESC
-         LIMIT 1`
+    const result = await pool.query(
+      `SELECT latitude, longitude, created_at as datahora
+       FROM locations
+       ORDER BY datahora DESC
+       LIMIT 1`
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Sem dados" });
+      return res.status(404).json({ error: 'Nenhuma localização encontrada' });
     }
 
-    const row = result.rows[0];
-    res.json({
-      latitude: Number(row.latitude),
-      longitude: Number(row.longitude),
-      datahora: row.data_hora,
-    });
+    res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro ao consultar banco" });
+    res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server rodando na porta ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
+});

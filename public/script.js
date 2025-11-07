@@ -9,7 +9,7 @@ let marker;
 // Função para atualizar posição do caminhão
 async function atualizarPosicao() {
   try {
-    const res = await fetch("https://mapa-6wu5.onrender.com/api/locations/latest");
+    const res = await fetch("http://mapa-6wu5.onrender.com/api/locations/latest");
     if (!res.ok) throw new Error("Erro na API");
 
     const data = await res.json();

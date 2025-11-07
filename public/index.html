@@ -14,42 +14,50 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
+    let map, marker;
+
     async function carregarLocalizacao() {
       try {
-        // Busca a última localização via API
         const res = await fetch("/api/locations/latest");
         if (!res.ok) throw new Error("Erro ao buscar localização");
 
         const data = await res.json();
 
-        // Verifica se retornou latitude e longitude
-        if (!data.latitude || !data.longitude) throw new Error("Dados de localização inválidos");
+        // Inicializa mapa na primeira execução
+        if (!map) {
+          map = L.map("map").setView([data.latitude, data.longitude], 15);
 
-        // Inicializa o mapa centralizado na posição do veículo
-        const map = L.map("map").setView([data.latitude, data.longitude], 15);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
+          }).addTo(map);
 
-        // Adiciona camada de mapa (OpenStreetMap)
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors"
-        }).addTo(map);
-
-        // Adiciona marcador na posição do veículo
-        const marker = L.marker([data.latitude, data.longitude]).addTo(map);
-        marker.bindPopup(
-          `<b>Caminhão</b><br>
-          Latitude: ${data.latitude}<br>
-          Longitude: ${data.longitude}<br>
-          ${new Date(data.datahora).toLocaleString("pt-BR")}`
-        ).openPopup();
+          marker = L.marker([data.latitude, data.longitude]).addTo(map);
+          marker.bindPopup(
+            `<b>Caminhão</b><br>
+            Latitude: ${data.latitude}<br>
+            Longitude: ${data.longitude}<br>
+            ${new Date(data.datahora).toLocaleString("pt-BR")}`
+          ).openPopup();
+        } else {
+          // Atualiza posição do marcador
+          marker.setLatLng([data.latitude, data.longitude]);
+          marker.setPopupContent(
+            `<b>Caminhão</b><br>
+            Latitude: ${data.latitude}<br>
+            Longitude: ${data.longitude}<br>
+            ${new Date(data.datahora).toLocaleString("pt-BR")}`
+          );
+          map.panTo([data.latitude, data.longitude]);
+        }
 
       } catch (error) {
         console.error("Erro ao carregar localização:", error);
-        alert("Não foi possível carregar a posição do caminhão.");
       }
     }
 
-    // Executa ao carregar a página
+    // Atualiza a cada 10 segundos
     carregarLocalizacao();
+    setInterval(carregarLocalizacao, 10000);
   </script>
 </body>
 </html>
