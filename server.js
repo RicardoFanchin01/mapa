@@ -6,13 +6,15 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configura banco Neon
+// Corrige __dirname em ES Module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Banco Neon
 const pool = new Pool({
   host: process.env.NEON_HOST,
   database: process.env.NEON_DB,
@@ -22,13 +24,13 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Permite acesso do frontend
+// Habilita CORS
 app.use(cors());
 
-// Serve arquivos estáticos da pasta 'public'
+// Serve frontend
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rota API para última localização
+// Rota para última localização
 app.get('/api/locations/latest', async (req, res) => {
   try {
     const result = await pool.query(
@@ -44,11 +46,12 @@ app.get('/api/locations/latest', async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Erro ao buscar localização:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+// Start server (escuta todas as interfaces)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
