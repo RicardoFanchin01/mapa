@@ -5,6 +5,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import pkg from "pg";
+import db from './db.js';
+
 
 dotenv.config();
 
@@ -55,7 +57,7 @@ const pool = new Pool({
 const query = (text, params) => pool.query(text, params);
 
 // Rota para pegar última localização
-app.get("https://rastreador-1.onrender.com/api/locations/latest", async (req, res) => {
+app.get("/api/locations/latest", async (req, res) => {
   try {
     const result = await query(
       `SELECT latitude, longitude,
