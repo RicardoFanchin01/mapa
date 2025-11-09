@@ -40,6 +40,7 @@ app.get('/api/locations/latest', async (req, res) => {
        LIMIT 1`
     );
 
+    
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Nenhuma localização encontrada' });
     }
