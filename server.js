@@ -27,8 +27,7 @@ const pool = new Pool({
 // Habilita CORS
 app.use(cors());
 
-// Serve frontend
-app.use(express.static(path.join(__dirname, 'public')));
+
 
 // Rota para última localização
 app.get('/api/locations/latest', async (req, res) => {
@@ -39,17 +38,22 @@ app.get('/api/locations/latest', async (req, res) => {
        ORDER BY datahora DESC
        LIMIT 1`
     );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Nenhuma localização encontrada' });
-    }
-
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Erro ao buscar localização:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
+// Serve frontend
+app.use(express.static(path.join(__dirname, 'public')));
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Nenhuma localização encontrada' });
+    }
+    app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+    
 
 // Start server (escuta todas as interfaces)
 app.listen(PORT, '0.0.0.0', () => {
