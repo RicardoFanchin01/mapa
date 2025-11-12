@@ -32,18 +32,24 @@ app.use(cors());
 // Rota para última localização
 app.get('/api/locations/latest', async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT latitude, longitude, created_at as datahora
-       FROM locations
-       ORDER BY datahora DESC
-       LIMIT 1`
-    );
+    const result = await pool.query(`
+      SELECT latitude, longitude, created_at as datahora
+      FROM locations
+      ORDER BY datahora DESC
+      LIMIT 1
+    `);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Nenhuma localização encontrada' });
+    }
+
     res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Erro ao buscar localização:', err);
-    res.status(500).json({ error: 'Erro no servidor' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar localização' });
   }
 });
+
 // Serve frontend
 app.use(express.static(path.join(__dirname, 'public')));
     if (result.rows.length === 0) {
