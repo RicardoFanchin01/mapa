@@ -27,8 +27,6 @@ const pool = new Pool({
 // Habilita CORS
 app.use(cors());
 
-
-
 // Rota para última localização
 app.get('/api/locations/latest', async (req, res) => {
   try {
@@ -52,16 +50,13 @@ app.get('/api/locations/latest', async (req, res) => {
 
 // Serve frontend
 app.use(express.static(path.join(__dirname, 'public')));
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Nenhuma localização encontrada' });
-    }
-    app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+
+// Se não encontrar rota, devolve index.html (React Router)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-    
-
-// Start server (escuta todas as interfaces)
+// Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
